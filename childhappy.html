@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童节快乐</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --pink: #ff69b4;
+            --pink-deep: #ff1493;
+            --pink-soft: #ffb6c1;
+            --purple-soft: #dda0dd;
+            --gold: #ffd700;
+        }
+
+        body {
+            font-family: 'ZCOOL KuaiLe', 'Ma Shan Zheng', cursive;
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe4ec 50%, #ffd6e7 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .balloons-container, .confetti-container, .stars {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .balloon {
+            position: absolute;
+            bottom: -150px;
+            width: 60px; height: 75px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: float-up 8s ease-in-out infinite;
+            opacity: 0.85;
+        }
+        .balloon::before {
+            content: '';
+            position: absolute;
+            bottom: -8px; left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 12px solid inherit;
+        }
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -60px; left: 50%;
+            width: 2px; height: 50px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);
+        }
+        @keyframes float-up {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.85; }
+            50% { transform: translateY(-50vh) rotate(15deg); }
+            100% { transform: translateY(-110vh) rotate(0deg); opacity: 0; }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px; height: 10px;
+            top: -20px;
+            animation: confetti-fall 4s linear infinite;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        .star {
+            position: absolute;
+            width: 10px; height: 10px;
+            background: var(--gold);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: twinkle 2s ease-in-out infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Pages */
+        .page { display: none; min-height: 100vh; position: relative; z-index: 10; }
+        .page.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .choice-page.active { display: flex; }
+
+        /* Choice Page */
+        .choice-card, .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 50px 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(255, 105, 180, 0.3);
+        }
+        .choice-card h1, .login-card h1 { font-size: 42px; color: var(--pink-deep); margin-bottom: 10px; }
+        .choice-card > p, .login-card > p { color: var(--purple-soft); font-size: 18px; margin-bottom: 40px; }
+
+        .btn-group { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .btn-choice {
+            padding: 18px 40px;
+            font-size: 20px;
+            font-family: inherit;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-user {
+            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+            color: white;
+            box-shadow: 0 8px 30px rgba(255, 105, 180, 0.5);
+        }
+        .btn-admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+        }
+        .btn-choice:hover { transform: translateY(-3px) scale(1.05); }
+
+        /* Login Page */
+        .login-input {
+            width: 100%;
+            padding: 14px 20px;
+            margin-bottom: 15px;
+            border: 2px solid var(--pink-soft);
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            text-align: center;
+        }
+        .login-input:focus { outline: none; border-color: var(--pink); }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-family: inherit;
+            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 105, 180, 0.5); }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            animation: modal-pop 0.3s ease-out;
+            width: 90%;
+            max-width: 360px;
+        }
+        @keyframes modal-pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal h2 { font-size: 24px; color: var(--pink-deep); margin-bottom: 20px; }
+        .modal input {
+            width: 100%;
+            padding: 14px 20px;
+            margin-bottom: 15px;
+            border: 2px solid var(--pink-soft);
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            text-align: center;
+        }
+        .modal input:focus { outline: none; border-color: var(--pink); }
+        .modal-btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-family: inherit;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-confirm { background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%); color: white; margin-right: 10px; }
+        .btn-cancel { background: #eee; color: #666; }
+        .modal-btn:hover { transform: translateY(-2px); }
+
+        /* Wheel Page */
+        .wheel-title {
+            font-size: 48px;
+            color: var(--pink-deep);
+            text-shadow: 2px 2px 0 #fff;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        .wheel-main { display: flex; gap: 50px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+
+        .options-panel, .log-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.2);
+            width: 260px;
+        }
+        .options-panel h3, .log-panel h3 {
+            font-size: 18px;
+            color: var(--pink-deep);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .option-input {
+            width: 100%;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            border: 2px solid var(--pink-soft);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .option-input:focus { outline: none; border-color: var(--pink); }
+
+        .btn-save {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 184, 148, 0.4); }
+
+        .wheel-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; }
+
+        .wheel-pointer {
+            width: 40px; height: 50px;
+            background: linear-gradient(to bottom, var(--gold) 0%, #ffa500 100%);
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            position: relative;
+            z-index: 5;
+            margin-bottom: -10px;
+        }
+
+        .wheel-canvas {
+            border-radius: 50%;
+            box-shadow: 0 0 0 15px rgba(255, 105, 180, 0.3), 0 0 0 20px rgba(255, 182, 193, 0.3), 0 15px 50px rgba(0,0,0,0.15);
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+
+        .wheel-center {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, var(--gold) 0%, #ffa500 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            border: 4px solid white;
+        }
+
+        .btn-spin {
+            margin-top: 30px;
+            padding: 16px 50px;
+            font-size: 22px;
+            font-family: inherit;
+            background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(255, 105, 180, 0.5);
+            transition: all 0.3s ease;
+        }
+        .btn-spin:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(255, 105, 180, 0.6); }
+        .btn-spin:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .btn-back {
+            margin-top: 30px;
+            padding: 10px 30px;
+            font-size: 16px;
+            font-family: inherit;
+            background: transparent;
+            color: var(--pink);
+            border: 2px solid var(--pink);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-back:hover { background: var(--pink); color: white; }
+
+        /* Result Modal */
+        .result-modal h2 { font-size: 26px; color: var(--pink-deep); margin-bottom: 15px; }
+        .result-modal .result-text { font-size: 32px; color: var(--pink); margin-bottom: 25px; word-break: break-all; }
+        .result-modal .btn-close {
+            padding: 12px 40px;
+            font-size: 18px;
+            font-family: inherit;
+            background: var(--pink);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .result-modal .btn-close:hover { background: var(--pink-deep); }
+
+        /* Log Panel */
+        .log-list { max-height: 400px; overflow-y: auto; }
+        .log-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #fff0f5;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .log-item .log-user { font-size: 14px; color: var(--pink-deep); font-weight: bold; margin-bottom: 4px; }
+        .log-item .log-gift { font-size: 16px; color: var(--pink); margin-bottom: 4px; }
+        .log-item .log-time { font-size: 12px; color: #999; }
+        .log-empty { text-align: center; color: #999; padding: 30px 0; font-size: 14px; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #00b894;
+            color: white;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            z-index: 200;
+            animation: toast-in 0.3s ease, toast-out 0.3s ease 2s forwards;
+        }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes toast-out {
+            from { opacity: 1; transform: translateX(-50%) translateY(0); }
+            to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        .btn-clear-log {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-clear-log:hover { background: #ee5253; }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="balloons-container" id="balloons"></div>
+    <div class="confetti-container" id="confetti"></div>
+
+    <!-- Choice Page -->
+    <div class="page choice-page active" id="choicePage">
+        <div class="choice-card">
+            <h1>🎡 幸运摩天轮</h1>
+            <p>请选择您的身份进入</p>
+            <div class="btn-group">
+                <button class="btn-choice btn-user" onclick="showUserLogin()">普通用户</button>
+                <button class="btn-choice btn-admin" onclick="showAdminModal()">管理员</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Login Page -->
+    <div class="page" id="userLoginPage">
+        <div class="login-card">
+            <h1>👤 普通用户</h1>
+            <p>请输入您的昵称</p>
+            <input type="text" class="login-input" id="userName" placeholder="请输入昵称" maxlength="20">
+            <button class="btn-login" onclick="enterAsUser()">进入</button>
+        </div>
+    </div>
+
+    <!-- Admin Password Modal -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal">
+            <h2>🔐 管理员验证</h2>
+            <input type="password" id="adminPass" placeholder="请输入管理员密码" maxlength="20">
+            <div style="margin-top: 20px;">
+                <button class="modal-btn btn-confirm" onclick="enterAsAdmin()">确认</button>
+                <button class="modal-btn btn-cancel" onclick="closeAdminModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wheel Page -->
+    <div class="page" id="wheelPage">
+        <h2 class="wheel-title">🎡 幸运摩天轮 🎡</h2>
+        <div class="wheel-main">
+            <div class="options-panel" id="optionsPanel" style="display: none;">
+                <h3>✨ 选项设置 ✨</h3>
+                <input type="text" class="option-input" id="opt1" placeholder="选项 1">
+                <input type="text" class="option-input" id="opt2" placeholder="选项 2">
+                <input type="text" class="option-input" id="opt3" placeholder="选项 3">
+                <input type="text" class="option-input" id="opt4" placeholder="选项 4">
+                <input type="text" class="option-input" id="opt5" placeholder="选项 5">
+                <input type="text" class="option-input" id="opt6" placeholder="选项 6">
+                <button class="btn-save" onclick="saveOptions()">保存设置</button>
+            </div>
+            <div class="log-panel" id="logPanel" style="display: none;">
+                <h3>📋 抽奖记录</h3>
+                <div class="log-list" id="logList"></div>
+                <button class="btn-clear-log" onclick="clearLog()">清空记录</button>
+            </div>
+            <div class="wheel-wrapper" id="wheelWrapper">
+                <div class="wheel-pointer"></div>
+                <div class="relative">
+                    <canvas class="wheel-canvas" id="wheelCanvas" width="350" height="350"></canvas>
+                    <div class="wheel-center">🎠</div>
+                </div>
+                <button class="btn-spin" id="btnSpin" onclick="spinWheel()">开始</button>
+            </div>
+        </div>
+        <button class="btn-back" onclick="goBack()">返回</button>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal result-modal">
+            <h2>🎁 恭喜 <span id="resultUser"></span> 获得 🎁</h2>
+            <p class="result-text" id="resultText"></p>
+            <button class="btn-close" onclick="closeResultModal()">太棒了！</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_OPTIONS = 'childhappy-options';
+        const STORAGE_LOG = 'childhappy-log';
+        const ADMIN_PASSWORD = '888';
+        const DEFAULT_OPTIONS = ['糖果', '玩具', '冰淇淋', '游乐园', '蛋糕', '绘本'];
+
+        const colors = ['#ff69b4', '#ffb6c1', '#dda0dd', '#ffd1dc', '#ff85a2', '#ffc0cb'];
+        let currentRotation = 0;
+        let isSpinning = false;
+        let isAdmin = false;
+        let currentUser = '';
+        let hasSpun = false;
+
+        // Seeded random for consistent rotation
+        function seededRandom(seed) {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function loadOptions() {
+            const saved = localStorage.getItem(STORAGE_OPTIONS);
+            return saved ? JSON.parse(saved) : [...DEFAULT_OPTIONS];
+        }
+
+        function saveOptionsToStorage(options) {
+            localStorage.setItem(STORAGE_OPTIONS, JSON.stringify(options));
+        }
+
+        function loadLog() {
+            const saved = localStorage.getItem(STORAGE_LOG);
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveLog(log) {
+            localStorage.setItem(STORAGE_LOG, JSON.stringify(log));
+        }
+
+        function addLogEntry(user, prize) {
+            const log = loadLog();
+            log.unshift({ user, prize, time: new Date().toLocaleString('zh-CN') });
+            saveLog(log);
+        }
+
+        function renderLog() {
+            const log = loadLog();
+            const list = document.getElementById('logList');
+            if (log.length === 0) {
+                list.innerHTML = '<div class="log-empty">暂无记录</div>';
+                return;
+            }
+            list.innerHTML = log.map(item => `
+                <div class="log-item">
+                    <div class="log-user">👤 ${item.user}</div>
+                    <div class="log-gift">🎁 ${item.prize}</div>
+                    <div class="log-time">🕐 ${item.time}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearLog() {
+            if (confirm('确定清空所有记录？')) {
+                saveLog([]);
+                renderLog();
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        function createStars() {
+            const c = document.getElementById('stars');
+            for (let i = 0; i < 25; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                s.style.left = Math.random() * 100 + '%';
+                s.style.top = Math.random() * 100 + '%';
+                s.style.animationDelay = Math.random() * 2 + 's';
+                s.style.transform = `scale(${0.5 + Math.random() * 0.8})`;
+                c.appendChild(s);
+            }
+        }
+
+        function createBalloons() {
+            const c = document.getElementById('balloons');
+            for (let i = 0; i < 12; i++) {
+                const b = document.createElement('div');
+                b.className = 'balloon';
+                b.style.left = Math.random() * 100 + '%';
+                b.style.background = colors[Math.floor(Math.random() * colors.length)];
+                b.style.animationDuration = (6 + Math.random() * 4) + 's';
+                b.style.animationDelay = Math.random() * 8 + 's';
+                b.style.width = (40 + Math.random() * 30) + 'px';
+                b.style.height = (50 + Math.random() * 30) + 'px';
+                c.appendChild(b);
+            }
+        }
+
+        function createConfetti() {
+            const c = document.getElementById('confetti');
+            const cc = ['#ff69b4', '#ffb6c1', '#ffd700', '#ff85a2', '#dda0dd', '#87ceeb'];
+            for (let i = 0; i < 40; i++) {
+                const x = document.createElement('div');
+                x.className = 'confetti';
+                x.style.left = Math.random() * 100 + '%';
+                x.style.background = cc[Math.floor(Math.random() * cc.length)];
+                x.style.animationDuration = (3 + Math.random() * 2) + 's';
+                x.style.animationDelay = Math.random() * 5 + 's';
+                x.style.width = (5 + Math.random() * 10) + 'px';
+                x.style.height = (5 + Math.random() * 10) + 'px';
+                x.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                c.appendChild(x);
+            }
+        }
+
+        function drawWheel() {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const r = 165;
+            const slice = Math.PI * 2 / 6;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const options = loadOptions();
+
+            for (let i = 0; i < 6; i++) {
+                const sa = i * slice + currentRotation;
+                const ea = sa + slice;
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, sa, ea);
+                ctx.closePath();
+                ctx.fillStyle = colors[i];
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(sa + slice / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#fff';
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowBlur = 3;
+                ctx.font = 'bold 18px "ZCOOL KuaiLe", cursive';
+                ctx.fillText(options[i], r - 20, 6);
+                ctx.restore();
+            }
+        }
+
+        function getInputOptions() {
+            return [
+                document.getElementById('opt1').value || '选项1',
+                document.getElementById('opt2').value || '选项2',
+                document.getElementById('opt3').value || '选项3',
+                document.getElementById('opt4').value || '选项4',
+                document.getElementById('opt5').value || '选项5',
+                document.getElementById('opt6').value || '选项6'
+            ];
+        }
+
+        function populateInputs() {
+            const opts = loadOptions();
+            for (let i = 0; i < 6; i++) {
+                document.getElementById(`opt${i+1}`).value = opts[i];
+            }
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function showUserLogin() {
+            document.getElementById('userName').value = '';
+            showPage('userLoginPage');
+        }
+
+        function showAdminModal() {
+            document.getElementById('adminModal').classList.add('active');
+            document.getElementById('adminPass').value = '';
+            document.getElementById('adminPass').focus();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.remove('active');
+        }
+
+        function enterAsUser() {
+            const name = document.getElementById('userName').value.trim();
+            if (!name) {
+                alert('请输入昵称');
+                return;
+            }
+            currentUser = name;
+            hasSpun = false;
+            showPage('wheelPage');
+            document.getElementById('optionsPanel').style.display = 'none';
+            document.getElementById('logPanel').style.display = 'none';
+            document.getElementById('wheelWrapper').style.display = 'flex';
+            document.getElementById('btnSpin').style.display = 'block';
+            drawWheel();
+        }
+
+        function enterAsAdmin() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass !== ADMIN_PASSWORD) {
+                alert('密码错误');
+                return;
+            }
+            isAdmin = true;
+            closeAdminModal();
+            showPage('wheelPage');
+            document.getElementById('optionsPanel').style.display = 'block';
+            document.getElementById('logPanel').style.display = 'block';
+            document.getElementById('wheelWrapper').style.display = 'flex';
+            document.getElementById('btnSpin').style.display = 'none';
+            populateInputs();
+            renderLog();
+            drawWheel();
+        }
+
+        function saveOptions() {
+            const opts = getInputOptions();
+            saveOptionsToStorage(opts);
+            drawWheel();
+            showToast('设置已保存！');
+        }
+
+        function spinWheel() {
+            if (isSpinning || hasSpun) return;
+            isSpinning = true;
+            hasSpun = true;
+            document.getElementById('btnSpin').disabled = true;
+
+            const canvas = document.getElementById('wheelCanvas');
+            const duration = 4000;
+
+            // Use timestamp as seed for consistent random
+            const seed = Date.now();
+            const extraRotations = 5 + seededRandom(seed) * 5; // 5-10 full rotations
+            const targetRotation = currentRotation + extraRotations * Math.PI * 2;
+
+            canvas.style.transition = `transform ${duration}ms cubic-bezier(0.17, 0.67, 0.12, 0.99)`;
+            canvas.style.transform = `rotate(${targetRotation}rad)`;
+
+            setTimeout(() => {
+                currentRotation = targetRotation % (Math.PI * 2);
+                canvas.style.transition = 'none';
+
+                // Calculate which slice the pointer (top) is pointing to
+                // Pointer is at top (270 degrees or -90 degrees or 3π/2)
+                const pointerAngle = Math.PI * 1.5; // 270 degrees
+                const slice = Math.PI * 2 / 6;
+
+                // Normalize current rotation to 0-2π range
+                let normalizedRotation = currentRotation % (Math.PI * 2);
+                if (normalizedRotation < 0) normalizedRotation += Math.PI * 2;
+
+                // The angle that the wheel has rotated relative to the pointer
+                // We need to find which slice is at the top (pointer position)
+                // After rotation, slice i's center angle is: i * slice + rotation
+                // We want to find which slice's center is closest to pointerAngle (270°)
+                // Actually, we need to find which slice is UNDER the pointer at the top
+
+                // The pointer is at the top. After rotation, we need to find which slice is there.
+                // Slice 0 starts at angle 0 (3 o'clock), slice 1 at 60°, etc.
+                // After rotation, slice i's start angle is: i * slice + rotation
+                // The slice under the pointer (at top/270°) would be:
+                // We find i such that: (i * slice + rotation + slice/2) mod (2π) ≈ pointerAngle
+
+                let minDiff = Infinity;
+                let selectedIndex = 0;
+                const options = loadOptions();
+
+                for (let i = 0; i < 6; i++) {
+                    // The center of slice i after rotation
+                    const sliceCenter = i * slice + currentRotation + slice / 2;
+                    // Normalize to 0-2π
+                    let normalizedCenter = sliceCenter % (Math.PI * 2);
+                    if (normalizedCenter < 0) normalizedCenter += Math.PI * 2;
+
+                    // Calculate difference from pointer position (270° = 3π/2)
+                    const diff = Math.abs(normalizedCenter - pointerAngle);
+                    // Handle wrap-around
+                    const diff2 = Math.abs(normalizedCenter - pointerAngle + Math.PI * 2);
+                    const diff3 = Math.abs(normalizedCenter - pointerAngle - Math.PI * 2);
+                    const minD = Math.min(diff, diff2, diff3);
+
+                    if (minD < minDiff) {
+                        minDiff = minD;
+                        selectedIndex = i;
+                    }
+                }
+
+                const prize = options[selectedIndex];
+                document.getElementById('resultUser').textContent = currentUser;
+                document.getElementById('resultText').textContent = prize;
+                document.getElementById('resultModal').classList.add('active');
+
+                // Log the result
+                addLogEntry(currentUser, prize);
+
+                isSpinning = false;
+                document.getElementById('btnSpin').style.display = 'none';
+            }, duration);
+        }
+
+        function closeResultModal() {
+            document.getElementById('resultModal').classList.remove('active');
+        }
+
+        function goBack() {
+            isAdmin = false;
+            currentUser = '';
+            hasSpun = false;
+            document.getElementById('btnSpin').disabled = false;
+            document.getElementById('btnSpin').style.display = 'block';
+            showPage('choicePage');
+        }
+
+        document.getElementById('adminPass').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') enterAsAdmin();
+        });
+
+        createStars();
+        createBalloons();
+        createConfetti();
+    </script>
+</body>
+</html>
