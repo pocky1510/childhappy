@@ -255,10 +255,11 @@
 
         .wheel-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; }
 
-        .wheel-pointer {
-            width: 40px; height: 50px;
+.wheel-pointer {
+            width: 40px;
+            height: 50px;
             background: linear-gradient(to bottom, var(--gold) 0%, #ffa500 100%);
-            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
             position: relative;
             z-index: 5;
             margin-bottom: -10px;
@@ -452,7 +453,7 @@
                 <button class="btn-spin" id="btnSpin" onclick="spinWheel()">开始</button>
             </div>
         </div>
-        <button class="btn-back" onclick="goBack()">返回</button>
+        <button class="btn-back" onclick="goBackToChoice()">返回</button>
     </div>
 
     <!-- Result Modal -->
@@ -666,12 +667,20 @@
                 return;
             }
             currentUser = name;
-            hasSpun = false;
+            hasSpun = localStorage.getItem('childhappy-hasSpun-' + name) === 'true';
             showPage('wheelPage');
             document.getElementById('optionsPanel').style.display = 'none';
             document.getElementById('logPanel').style.display = 'none';
             document.getElementById('wheelWrapper').style.display = 'flex';
-            document.getElementById('btnSpin').style.display = 'block';
+
+            if (hasSpun) {
+                document.getElementById('btnSpin').style.display = 'none';
+                document.getElementById('btnSpin').disabled = true;
+            } else {
+                document.getElementById('btnSpin').style.display = 'block';
+                document.getElementById('btnSpin').disabled = false;
+            }
+
             drawWheel();
         }
 
@@ -704,6 +713,10 @@
             if (isSpinning || hasSpun) return;
             isSpinning = true;
             hasSpun = true;
+
+            // Save spin state for this user
+            localStorage.setItem('childhappy-hasSpun-' + currentUser, 'true');
+
             document.getElementById('btnSpin').disabled = true;
 
             const canvas = document.getElementById('wheelCanvas');
@@ -722,7 +735,7 @@
                 canvas.style.transition = 'none';
 
                 // Calculate which slice the pointer (top) is pointing to
-                // Pointer is at top (270 degrees or -90 degrees or 3π/2)
+                // Pointer is at top pointing DOWN (270 degrees or 3π/2)
                 const pointerAngle = Math.PI * 1.5; // 270 degrees
                 const slice = Math.PI * 2 / 6;
 
@@ -789,6 +802,11 @@
             hasSpun = false;
             document.getElementById('btnSpin').disabled = false;
             document.getElementById('btnSpin').style.display = 'block';
+            showPage('choicePage');
+        }
+
+        function goBackToChoice() {
+            isAdmin = false;
             showPage('choicePage');
         }
 
